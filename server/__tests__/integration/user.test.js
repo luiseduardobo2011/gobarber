@@ -41,4 +41,40 @@ describe('User', () => {
 
     expect(compareHash).toBe(true);
   });
+
+  // update
+  it('Should be able to update and login again', async () => {
+    await truncate();
+    const user = await factory.attrs('User');
+
+    await request(app)
+      .post('/users')
+      .send(user);
+
+    let loginResponse = await request(app)
+      .post('/sessions')
+      .send({ email: user.email, password: user.password });
+
+    loginResponse = JSON.parse(loginResponse.res.text);
+
+    const updatedUser = await factory.attrs('User', {
+      oldPassword: user.password,
+    });
+
+    await request(app)
+      .put('/users')
+      .set({ Authorization: `bearer ${loginResponse.token}` })
+      .send(updatedUser);
+
+    let loginResponseAfterUpdate = await request(app)
+      .post('/sessions')
+      .send({
+        email: updatedUser.email,
+        password: updatedUser.password,
+      });
+
+    loginResponseAfterUpdate = JSON.parse(loginResponseAfterUpdate.res.text);
+
+    expect(loginResponseAfterUpdate).toHaveProperty('token');
+  });
 });
