@@ -9,4 +9,9 @@ factory.define('User', User, {
   password: faker.internet.password(),
 });
 
+factory.define('Session', User, {
+  email: faker.internet.email(),
+  password: faker.internet.password(),
+});
+
 export default factory;
