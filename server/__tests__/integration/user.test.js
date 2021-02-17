@@ -20,6 +20,61 @@ describe('User', () => {
     expect(response.body).toHaveProperty('id');
   });
 
+  it('Should validate fields', async () => {
+    const user = await factory.attrs('User', { email: '' });
+
+    const response = await request(app)
+      .post('/users')
+      .send(user);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toStrictEqual({
+      error: 'Obrigatório.',
+      field: 'email',
+    });
+  });
+
+  it('Should validate fields on update', async () => {
+    const user = await factory.attrs('User');
+
+    await request(app)
+      .post('/users')
+      .send(user);
+
+    let loginResponse = await request(app)
+      .post('/sessions')
+      .send({ email: user.email, password: user.password });
+
+    loginResponse = JSON.parse(loginResponse.res.text);
+
+    const updatedUser = await factory.attrs('User');
+
+    const updateResponse = await request(app)
+      .put('/users')
+      .set({ Authorization: `bearer ${loginResponse.token}` })
+      .send(updatedUser);
+
+    expect(updateResponse.status).toBe(400);
+    expect(updateResponse.body).toStrictEqual({
+      error: 'Obrigatório.',
+      field: 'confirmPassword',
+    });
+
+    delete updatedUser.email;
+    delete updatedUser.password;
+
+    const updateResponse2 = await request(app)
+      .put('/users')
+      .set({ Authorization: `bearer ${loginResponse.token}` })
+      .send(updatedUser);
+
+    expect(updateResponse2.status).toBe(400);
+    expect(updateResponse2.body).toStrictEqual({
+      error: 'Obrigatório.',
+      field: 'email',
+    });
+  });
+
   it('Should not be able to register with diplicated email', async () => {
     const user = await factory.attrs('User');
 
