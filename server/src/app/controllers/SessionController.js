@@ -1,10 +1,34 @@
 import jwt from 'jsonwebtoken';
+import * as Yup from 'yup';
+import { ptShort } from 'yup-locale-pt';
 
 import User from '../models/User';
 import authConfig from '../../config/auth';
 
+Yup.setLocale(ptShort);
+
 class SessionController {
   async store(req, res) {
+    const schema = Yup.object().shape({
+      email: Yup.string()
+        .email()
+        .required(),
+      password: Yup.string()
+        .required()
+        .min(6),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      try {
+        await schema.validate(req.body);
+      } catch (error) {
+        return res.status(400).json({
+          error: error.message,
+          field: error.params.path,
+        });
+      }
+    }
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ where: { email } });
