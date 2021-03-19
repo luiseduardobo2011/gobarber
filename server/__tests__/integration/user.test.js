@@ -20,6 +20,16 @@ describe('User', () => {
     expect(response.body).toHaveProperty('id');
   });
 
+  it('Should be able to register a provider', async () => {
+    const provider = await factory.attrs('User', { provider: 1 });
+
+    const response = await request(app)
+      .post('/users')
+      .send(provider);
+
+    expect(response.body).toHaveProperty('id');
+  });
+
   it('Should validate fields', async () => {
     const user = await factory.attrs('User', { email: '' });
 
