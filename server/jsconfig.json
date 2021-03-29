@@ -1,5 +1,12 @@
 {
   "typeAcquisition": {
-    "include": ["jest", "faker", "factory-girl", "supertest", "sequelize"]
+    "include": [
+      "jest",
+      "faker",
+      "factory-girl",
+      "supertest",
+      "sequelize",
+      "mongoose"
+    ]
   }
 }
