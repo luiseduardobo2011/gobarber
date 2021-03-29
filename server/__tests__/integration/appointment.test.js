@@ -8,8 +8,10 @@ import factory from '../factories';
 
 let user;
 let loginResponse;
+let loginProviderResponse;
 let responseProvider;
 let provider;
+let globalAppointmentResponse;
 
 describe('Appointment', () => {
   // beforeEach(async () => {
@@ -35,21 +37,16 @@ describe('Appointment', () => {
       provider_id: responseProvider.body.id,
     });
 
-    const appoitmentResponse = await request(app)
+    globalAppointmentResponse = await request(app)
       .post('/appointments')
       .set({ Authorization: `bearer ${loginResponse.token}` })
       .send(appointment);
 
-    expect(appoitmentResponse.body).toHaveProperty('id');
+    expect(globalAppointmentResponse.body).toHaveProperty('id');
   });
 
   it('Should to block appointment in past', async () => {
-    const appointment = await factory.attrs('Appointment', {
-      date: () => {
-        return moment()
-          .subtract(1, 'hours')
-          .format('YYYY-MM-DD HH:MM:ss');
-      },
+    const appointment = await factory.attrs('AppointmentPast', {
       provider_id: responseProvider.body.id,
     });
 
@@ -61,7 +58,7 @@ describe('Appointment', () => {
     expect(appoitmentResponse.statusCode).toBe(400);
   });
 
-  it('Should to check availability before schdule', async () => {
+  it('Should to check availability before scheduled', async () => {
     const appointment = await factory.attrs('Appointment', {
       provider_id: responseProvider.body.id,
     });
@@ -77,5 +74,29 @@ describe('Appointment', () => {
       .send(appointment);
 
     expect(appoitmentResponse.statusCode).toBe(400);
+  });
+
+  it('Should to return a list of appoitments', async () => {
+    const appoitments = await request(app)
+      .get('/appointments')
+      .set({ Authorization: `bearer ${loginResponse.token}` });
+    expect(appoitments.body.length).toEqual(2);
+  });
+});
+
+describe('Appointment', () => {
+  it('Should to return a schedule of a provider', async () => {
+    loginProviderResponse = await request(app)
+      .post('/sessions')
+      .send({ email: provider.email, password: provider.password });
+
+    loginProviderResponse = JSON.parse(loginProviderResponse.res.text);
+
+    const appoitments = await request(app)
+      .get('/schedule')
+      .set({ Authorization: `bearer ${loginProviderResponse.token}` })
+      .query({ date: globalAppointmentResponse.body.date });
+
+    expect(appoitments.body.length).toBeGreaterThanOrEqual(1);
   });
 });

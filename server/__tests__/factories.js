@@ -8,7 +8,7 @@ import Appointment from '../src/app/models/Appointment';
 function getRandomInt(min, max) {
   min = Math.ceil(parseFloat(min));
   max = Math.floor(parseFloat(max));
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * (max - min)) + min;
 }
 
 factory.define('User', User, {
@@ -33,6 +33,17 @@ factory.define('Appointment', Appointment, {
   date: () => {
     const date = moment()
       .add(getRandomInt('0', '30'), 'days')
+      .hours(getRandomInt(process.env.INITIAL_HOUR, process.env.FINAL_HOUR) + 1)
+      .format('YYYY-MM-DD HH:MM:ss');
+    return date;
+  },
+  canceled_att: null,
+});
+
+factory.define('AppointmentPast', Appointment, {
+  date: () => {
+    const date = moment()
+      .subtract(getRandomInt('0', '30'), 'days')
       .hours(getRandomInt(process.env.INITIAL_HOUR, process.env.FINAL_HOUR) + 1)
       .format('YYYY-MM-DD HH:MM:ss');
     return date;
